@@ -9,6 +9,22 @@
 
 #define PORT 5001
 
+char* getNombreArchivo(){
+    char buffer[512], *p;
+    strcpy(buffer,"$HOME/temp/udp/README.md");
+    //lo abro y si no existe marco error
+    int i;
+    p=buffer;
+    for (i = strlen(buffer); i >=0 ; --i){
+        if(buffer[i]=='/')
+            break;
+        
+    }
+    p=p+i+1;
+    return p;
+
+}
+
 //espera argv[1] --> 127.0.0.1
 int main(int argc, char *argv[])
 {
@@ -54,6 +70,12 @@ int main(int argc, char *argv[])
     Maquina = gethostbyname ("localhost");
     serv_cliente.sin_addr.s_addr = ((struct in_addr *)(Maquina->h_addr))->s_addr;
     int long_cliente=sizeof(serv_cliente);
+    
+    char *p;
+    p=getNombreArchivo();
+    printf("[%s]\n", (char*)p);
+    strcpy(buffer,(char*)p);
+
     int e=sendto(Descriptor,buffer, sizeof(buffer),
      0, (struct sockaddr *)&serv_cliente, long_cliente);
     if (e<0){
