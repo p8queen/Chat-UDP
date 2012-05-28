@@ -5,12 +5,10 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
-
-//recibe cant de conecciones por parametro
-int main( int argc, char *argv[] )
-{
-    
+void* hiloUDPServer(void *arg){
+    //int sd = (int)arg; //socket
     // primer llamado a socket
     int sdudp = socket(AF_INET, SOCK_DGRAM, 0);
     if (sdudp < 0) 
@@ -25,8 +23,7 @@ int main( int argc, char *argv[] )
     serv_udp.sin_family = AF_INET;
     serv_udp.sin_addr.s_addr = INADDR_ANY;
     serv_udp.sin_port = htons(portno);
- 
-    
+     
     if (bind(sdudp, (struct sockaddr *) &serv_udp,
                           sizeof(serv_udp)) < 0)
     {
@@ -53,6 +50,28 @@ int main( int argc, char *argv[] )
         printf("error en sendto desde servidor a cliente\n");
         exit(1);
     }
+    return NULL;
+}
+
+void crearHiloUDP(int newsockfd){
+    pthread_t id;
+    pthread_attr_t attr;
+    if (pthread_attr_init(&attr) != 0){
+        perror("error init hilo"); exit(1); }
+    if(pthread_create(&id, &attr,hiloUDPServer,(void *)newsockfd) != 0){
+        perror("ERROR create hilo");exit(1); }
+}
+
+//recibe cant de conecciones por parametro
+int main( int argc, char *argv[] )
+{
+    
+    //lo de abajo ava en un hilo
+    crearHiloUDP();
+
+    //aquí va como sigue, con TCP/IP
+
+    
 
     return 0; 
 }
