@@ -16,7 +16,7 @@ void* hiloUDPServer(void *arg){
         exit(1); }
     /* Inicializa estructura */
     //bzero((char *) &serv_addr, sizeof(serv_addr));
-    struct sockaddr_in serv_udp, serv_cliente;
+    struct sockaddr_in serv_udp, serv_cliente1, serv_cliente2;
     int portno = 5002;
     serv_udp.sin_family = AF_INET;
     serv_udp.sin_addr.s_addr = INADDR_ANY;
@@ -29,20 +29,30 @@ void* hiloUDPServer(void *arg){
     /* Espera conecciones    */
     listen(sdudp,5); //5 es canidad máxima
     char buffer[1024]; //puede ser (char *)&estructura
-    int long_cliente=sizeof(serv_cliente);
-    int e=recvfrom(sdudp,buffer,sizeof(buffer),0,
-        (struct sockaddr *) &serv_cliente,&long_cliente);
-    if (e<0){ perror("error en recvfrom\n");exit(1);}
+    int long_cliente=sizeof(serv_cliente1);
+    
+    while(1){
+        int e=recvfrom(sdudp,buffer,sizeof(buffer),0,
+            (struct sockaddr *) &serv_cliente1,&long_cliente);
+        if (e<0){ perror("error en recvfrom\n");exit(1);}
 
-    printf("cliente>%s\n",buffer );    
-    //enviar respuesta a cliente
-    strcpy(buffer,"servidor a cliente\n"); 
+        printf("cliente 1>%s\n",buffer );    
+        //enviar respuesta a cliente
+        strcpy(buffer,"servidor a cliente\n"); 
 
-    e=sendto(sdudp,buffer, sizeof(buffer),
-     0, (struct sockaddr *)&serv_cliente, long_cliente);
-    if (e<0){ 
-        printf("error en sendto desde servidor a cliente\n");
-        exit(1); }
+        //2do cliente
+        e=recvfrom(sdudp,buffer,sizeof(buffer),0,
+            (struct sockaddr *) &serv_cliente2,&long_cliente);
+        if (e<0){ perror("error en recvfrom\n");exit(1);}
+
+        printf("cliente 2>%s\n",buffer );    
+        
+        e=sendto(sdudp,buffer, sizeof(buffer),
+         0, (struct sockaddr *)&serv_cliente1, long_cliente);
+        if (e<0){ 
+            printf("error en sendto desde servidor a cliente\n");
+            exit(1); }
+    }    
     return NULL;
 }
 
@@ -53,7 +63,7 @@ int crearHiloUDP(){
         perror("error init hilo"); exit(1); }
     if(pthread_create(&id, &attr,hiloUDPServer,NULL) != 0){
         perror("ERROR create hilo");exit(1); }
-        return id
+        return id;
 }
 
 //recibe cant de conecciones por parametro
@@ -66,7 +76,7 @@ int main( int argc, char *argv[] )
     //aquí va como sigue, con TCP/IP
     
     //espero finalizacion hilos
-    pthread_join(h1,NULL);
+    pthread_join(hudp,NULL);
     
 
     return 0; 

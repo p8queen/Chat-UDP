@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     
     char *p;
     p=getNombreArchivo();
-    printf("[%s]\n", (char*)p);
+    printf("nombre archivo: [%s]\n", (char*)p);
     strcpy(buffer,(char*)p);
 
     int e=sendto(Descriptor,buffer, sizeof(buffer),
