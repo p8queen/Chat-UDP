@@ -1,4 +1,4 @@
 # chat simple en udp
 
-es un linea de prueba para Chat en C
+*cliente.c* envía un file a *cliente2.c* usando protocolo *UDP*
 
