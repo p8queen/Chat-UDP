@@ -1,3 +1,5 @@
+/* envia
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -6,7 +8,8 @@
 #include <netdb.h>
 #include <string.h>
 #include <signal.h>
-
+#include <sys/stat.h>
+#include <fcntl.h>
 #define PORT 5001
 
 char* getNombreArchivo(){
@@ -22,6 +25,44 @@ char* getNombreArchivo(){
     }
     p=p+i+1;
     return p;
+
+}
+
+void enviarArchivo(int socketUDP, struct sockaddr_in serv_cliente){
+    char nombre[255];
+    int n,e,f;
+    struct Encabezado{
+          char nombre[255];
+          off_t size;
+      }encabezado;  
+    int long_cliente=sizeof(serv_cliente);
+    strcpy(encabezado.nombre,"/home/alumno/gustavo/udp/README.md");
+    //
+    int fd = open(encabezado.nombre,O_RDONLY,0777);
+     if( fd<0 ) {
+    perror("no se pudo abrir el archivo.\n");
+    exit(1);
+  }
+  encabezado.size = lseek(fd,0,SEEK_END);
+  printf("tamanio archivo: %d\n", encabezado.size);
+  f=sendto(socketUDP,&encabezado, sizeof(struct Encabezado),
+     0, (struct sockaddr *)&serv_cliente, long_cliente);
+    if (f<0){ perror("error en sendto desde servidor a cliente\n");
+        exit(1); }
+
+  lseek(fd,0,SEEK_SET);
+  while( (e = read(fd,nombre,254)) != 0 ){ 
+    nombre[e]='\0'; 
+    f=sendto(socketUDP,nombre, sizeof(nombre),
+     0, (struct sockaddr *)&serv_cliente, long_cliente);
+    if (f<0){
+        perror("error en sendto desde servidor a cliente\n");
+        exit(1);
+    }     
+  }
+
+   close(fd); // cierro el archivo O_RDONLY
+
 
 }
 
@@ -67,7 +108,7 @@ int main(int argc, char *argv[])
     serv_cliente.sin_port = htons(5002);// Aquí debemos dar el puerto del servidor
     // Aquí debemos dar la dirección IP del servidor, en formato de red. 
     struct hostent *Maquina;
-    Maquina = gethostbyname ("localhost");
+    Maquina = gethostbyname ("127.0.0.1"); //localhost
     serv_cliente.sin_addr.s_addr = ((struct in_addr *)(Maquina->h_addr))->s_addr;
     int long_cliente=sizeof(serv_cliente);
     
@@ -76,19 +117,13 @@ int main(int argc, char *argv[])
     printf("nombre archivo: [%s]\n", (char*)p);
     strcpy(buffer,(char*)p);
 
-    int e=sendto(Descriptor,buffer, sizeof(buffer),
+    /*int e=sendto(Descriptor,buffer, sizeof(buffer),
      0, (struct sockaddr *)&serv_cliente, long_cliente);
     if (e<0){
         printf("error en sendto desde servidor a cliente\n");
         exit(1);
     }
-    //recvfrom
-    bzero((char *) &serv_cliente, sizeof(serv_cliente));
-    e=recvfrom(Descriptor,buffer,sizeof(buffer),0,
-        (struct sockaddr *) &serv_cliente,&long_cliente);
-    if (e<0){
-        perror("error en recvfrom\n");exit(1);}
-    printf("servidor>%s\n", buffer);    
-
+    */
+    enviarArchivo(Descriptor, serv_cliente);
     return 0;
 }
